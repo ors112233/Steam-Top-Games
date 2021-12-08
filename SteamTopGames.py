@@ -2,6 +2,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import math
 
 
 
@@ -28,16 +29,19 @@ if __name__ == '__main__':
         except Exception as e:
             print('there is a problem on line' + str(i) + ' cant find name')
             print(e)
+            curr_game_name = math.nan
         try:
             curr_game_date = curr_game.find('span', attrs={'class':'date'}).find('a').string.strip()
         except Exception as e:
             print('there is a problem on line' + str(i) + ' cant find date')
             print(e)
+            curr_game_date = math.nan
         try:
             curr_game_genre = curr_game.find('a', attrs={'class':'genre'}).string.strip()
         except Exception as e:
             print('there is a problem on line' + str(i)+ ' cant find genre')
             print(e)
+            curr_game_genre = math.nan
         try:
             curr_game_price = curr_game.find('span',attrs={'class':'price'}).string.strip()
             curr_game_price = curr_game_price.replace("$", "")
@@ -45,12 +49,14 @@ if __name__ == '__main__':
         except Exception as e:
             print('there is a problem on line' + str(i)+ ' cant find price')
             print(e)
+            curr_game_price = math.nan
         try:
             curr_game_score = curr_game.find('span', attrs={'class':'score'}).string.strip()
             curr_game_score = float(curr_game_score)
         except Exception as e:
             print('there is a problem on line' + str(i) + ' cant find score')
             print(e)
+            curr_game_score = math.nan
         try:
             curr_game_rating = curr_game.find('span', attrs={'class': 'rating'}).string.strip()
             curr_game_rating = curr_game_rating.replace("%","")
@@ -58,6 +64,7 @@ if __name__ == '__main__':
         except Exception as e:
             print('there is a problem on line' + str(i) +' cant find rating')
             print(e)
+            curr_game_rating = math.nan
         try:
             curr_game_votes = curr_game.find('span',attrs={'class':'votes'}).string.strip()
             curr_game_votes = curr_game_votes.replace("votes","")
@@ -67,6 +74,7 @@ if __name__ == '__main__':
         except Exception as e:
             print('there is a problem on line' + str(i)+ ' cant find votes')
             print(e)
+            curr_game_votes = math.nan
         try:
             curr_game_id = curr_game.find('span',attrs={'class':'title'}).find('a').get('href')
             reversed_id = ""
@@ -81,6 +89,7 @@ if __name__ == '__main__':
         except Exception as e:
             print('there is a problem on line' + str(i)+ ' cant find Id')
             print(e)
+            curr_game_id = math.nan
 
         #appending the paramaters into thier respective lists
         game_name.append(curr_game_name)
@@ -93,5 +102,5 @@ if __name__ == '__main__':
         game_id.append(curr_game_id)
 
     games_df = pd.DataFrame({'Name':game_name,'Date':game_date,'Genre':game_genre,'Price':game_price,'Score':game_score,'Rating':game_rating,'Votes':game_votes})
-    print(games_df)
+    print(games_df.info())
 
