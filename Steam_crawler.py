@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-
+#this is me
 def GetDataFromGame(game_url):
     response = requests.get(game_url)
     game_soup = BeautifulSoup(response.content,'html.parser')
