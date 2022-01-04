@@ -14,57 +14,53 @@ def GetDataFromGame(game_url):
         game_genre.append(i.string.strip())
     game_review_count = game_soup.find('label',attrs={'for':'review_type_all'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_count = game_review_count.replace(')','').replace('(','')
-    try:
-        game_review_count = game_review_count.replace(',','')
-    except Exception as e:
-        print(e)
+    game_review_count = game_review_count.replace(',','')
     game_review_count = float(game_review_count)
     game_review_positive = game_soup.find('label',attrs={'for':'review_type_positive'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_positive = game_review_positive.replace(')','').replace('(','')
-    try:
-        game_review_positive = game_review_positive.replace(',','')
-    except Exception as e:
-        print(e)
+    game_review_positive = game_review_positive.replace(',','')
     game_review_positive = float(game_review_positive)
     game_review_negative = game_soup.find('label',attrs={'for':'review_type_negative'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_negative = game_review_negative.replace(')', '').replace('(', '')
-    try:
-        game_review_negative = game_review_negative.replace(',','')
-    except Exception as e:
-        print(e)
+    game_review_negative = game_review_negative.replace(',','')
     game_review_negative = float(game_review_negative)
     game_price = game_soup.find('div',attrs={'class':'game_purchase_price price'}).string.strip()
     game_price = game_price.replace('₪','')
-    try:
-        game_price = game_price.replace(',','')
-    except Exception as e:
-        print(e)
+    game_price = game_price.replace(',','')
     game_price = float(game_price)
 
     return game_name,game_date,game_developer,game_genre,game_review_count,game_review_positive,game_review_negative,game_price
 
 
 if __name__ == '__main__':
+    #get of 50 first games
     baseurl = "https://store.steampowered.com/search/?sort_by=Reviews_DESC&filter=topsellers"
     response = requests.get(baseurl)
     website_soup = BeautifulSoup(response.content, 'html.parser')
-    List_of_games_tags = website_soup.find('div', attrs={'id': 'search_resultsRows'}).find_all('a')
-    links = []
-    game_id = []
+
+    #finds each game's http link
+    links = website_soup.find('div', attrs={'id': 'search_resultsRows'}).find_all('a')['href']
+
+    #these are the lists that will become the cols of the dataframe:
     game_name_list = []
     game_date_list = []
     game_developer_list = []
-    game_genre_list = []
+    game_publisher_list = []
+    game_genres_list = []
+    game_price_list = []
+    game_langs_list = []
+    game_dlc_flag_list = []
+    game_mature_flag_list = []
+    game_single_flag_list = []
+    game_score_list = []
+
+    #these will be used to calc the score of each game:
     game_review_count_list = []
     game_review_positive_list = []
     game_review_negative_list = []
-    game_price_list = []
-    for i in List_of_games_tags:
-        links.append(i.get('href'))
-        game_id.append(i.get('data-ds-appid'))
+
     for game_url in links:
         curr_game_name, curr_game_date, curr_game_developer, curr_game_genre, curr_game_review_count, curr_game_review_positive, curr_game_review_negative, curr_game_price = GetDataFromGame(game_url)
-        print("game_url" + game_url + 'succsseded')
         game_name_list.append(curr_game_name)
         game_date_list.append(curr_game_date)
         game_developer_list.append(curr_game_developer)
