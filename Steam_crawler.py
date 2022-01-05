@@ -5,7 +5,6 @@ import pandas as pd
 def GetDataFromGame(game_url):
     response = requests.get(game_url)
     game_soup = BeautifulSoup(response.content,'html.parser')
-    
     #addressing if the page is a bundle page, directing to the main game link
     bundle_tag = game_soup.find('div', attrs={'id':'package_header_container'})
     if bundle_tag:
@@ -16,6 +15,8 @@ def GetDataFromGame(game_url):
     game_name = game_soup.find('div',attrs={'class':'apphub_AppName'}).string.strip()
     game_date = game_soup.find('div',attrs={'class':'date'}).string.strip()
     game_developer = game_soup.find('div',attrs={'id':'developers_list'}).find('a').string.strip()
+    tag = game_soup.find('div',string = 'Publisher:')
+    #game_publisher = tag.find('a').string.strip()
     game_genre = []
     game_genre_prep = game_soup.find('span',attrs={'data-panel':'{"flow-children":"row"}'}).find_all('a')
     for i in game_genre_prep:
@@ -45,9 +46,10 @@ if __name__ == '__main__':
     baseurl = "https://store.steampowered.com/search/?sort_by=Reviews_DESC&filter=topsellers"
     response = requests.get(baseurl)
     website_soup = BeautifulSoup(response.content, 'html.parser')
-
+    links = []
     #finds each game's http link
-    links = website_soup.find('div', attrs={'id': 'search_resultsRows'}).find_all('a')['href']
+    for link in website_soup.find('div', attrs={'id': 'search_resultsRows'}).find_all('a'):
+        links.append(link['href'])
 
     #these are the lists that will become the cols of the dataframe:
     game_name_list = []
