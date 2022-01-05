@@ -5,6 +5,14 @@ import pandas as pd
 def GetDataFromGame(game_url):
     response = requests.get(game_url)
     game_soup = BeautifulSoup(response.content,'html.parser')
+    
+    #addressing if the page is a bundle page, directing to the main game link
+    bundle_tag = game_soup.find('div', attrs={'id':'package_header_container'})
+    if bundle_tag:
+        game_url = game_soup.find('div', attrs={'class':'tab_item tablet_list_item app_impression_tracked'}).find('a')['href']
+        response = requests.get(game_url)
+        game_soup = BeautifulSoup(response.content,'html.parser')
+    
     game_name = game_soup.find('div',attrs={'class':'apphub_AppName'}).string.strip()
     game_date = game_soup.find('div',attrs={'class':'date'}).string.strip()
     game_developer = game_soup.find('div',attrs={'id':'developers_list'}).find('a').string.strip()
@@ -58,7 +66,8 @@ if __name__ == '__main__':
     game_review_count_list = []
     game_review_positive_list = []
     game_review_negative_list = []
-
+    
+    #get each games data and append the respective lists
     for game_url in links:
         curr_game_name, curr_game_date, curr_game_developer, curr_game_genre, curr_game_review_count, curr_game_review_positive, curr_game_review_negative, curr_game_price = GetDataFromGame(game_url)
         game_name_list.append(curr_game_name)
