@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+import numpy as np
 
 def GetDataFromGame(game_url):
     response = requests.get(game_url)
@@ -12,33 +13,66 @@ def GetDataFromGame(game_url):
         response = requests.get(game_url)
         game_soup = BeautifulSoup(response.content,'html.parser')
     
+    dlc_tag = game_soup.find('div',attrs={'class':'game_area_bubble game_area_dlc_bubble '})
     game_name = game_soup.find('div',attrs={'class':'apphub_AppName'}).string.strip()
     game_date = game_soup.find('div',attrs={'class':'date'}).string.strip()
     game_developer = game_soup.find('div',attrs={'id':'developers_list'}).find('a').string.strip()
-    tag = game_soup.find('div',string = 'Publisher:')
-    #game_publisher = tag.find('a').string.strip()
+    for pub in game_soup.find('div',attrs={'class':'glance_ctn_responsive_left'}).find_all('div',attrs={'class':'dev_row'}):
+        game_publisher = (pub.find('a').string.strip()) #always ends on the 2nd string, which is pub
     game_genre = []
-    game_genre_prep = game_soup.find('span',attrs={'data-panel':'{"flow-children":"row"}'}).find_all('a')
-    for i in game_genre_prep:
+    for i in game_soup.find('span',attrs={'data-panel':'{"flow-children":"row"}'}).find_all('a'):
         game_genre.append(i.string.strip())
+
+    #getting review num and cleaning data
     game_review_count = game_soup.find('label',attrs={'for':'review_type_all'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_count = game_review_count.replace(')','').replace('(','')
     game_review_count = game_review_count.replace(',','')
     game_review_count = float(game_review_count)
+
+    #getting pos review num and cleaning data
     game_review_positive = game_soup.find('label',attrs={'for':'review_type_positive'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_positive = game_review_positive.replace(')','').replace('(','')
     game_review_positive = game_review_positive.replace(',','')
     game_review_positive = float(game_review_positive)
+
+    #getting neg review num and cleaning data
     game_review_negative = game_soup.find('label',attrs={'for':'review_type_negative'}).find('span',attrs={'class':'user_reviews_count'}).string.strip()
     game_review_negative = game_review_negative.replace(')', '').replace('(', '')
     game_review_negative = game_review_negative.replace(',','')
     game_review_negative = float(game_review_negative)
+
+    #getting game price and cleaning data
     game_price = game_soup.find('div',attrs={'class':'game_purchase_price price'}).string.strip()
     game_price = game_price.replace('₪','')
     game_price = game_price.replace(',','')
     game_price = float(game_price)
 
-    return game_name,game_date,game_developer,game_genre,game_review_count,game_review_positive,game_review_negative,game_price
+    game_langs = []
+    for lang in game_soup.find('div',attrs={'id':'languageTable'}).find_all('td',attrs={'class':'ellipsis'}):
+        game_langs.append(lang.string.strip())
+
+    if game_soup.find('div',attrs={'id':'gameAreaDLCSection'}):
+        game_dlc = 1
+    else:
+        game_dlc = 0
+
+    if game_soup.find('div',attrs={'id':'game_area_content_descriptors'}):
+        game_mature = 1
+    else:
+        game_mature = 0
+    
+        
+    #dealing with very special case where there is no cat_block
+    try:
+        single_tag = game_soup.find('div',attrs={'id':'category_block'}).find('div',attrs={'class':'label'}).string.strip()
+        if single_tag == 'Single-player':
+            game_single = 1
+        else:
+            game_single = 0
+    except:
+        game_single = np.nan
+
+    return game_name,game_date,game_developer,game_publisher,game_genre,game_review_count,game_review_positive,game_review_negative,game_price,game_langs,game_dlc,game_mature,game_single
 
 
 if __name__ == '__main__':
@@ -71,16 +105,21 @@ if __name__ == '__main__':
     
     #get each games data and append the respective lists
     for game_url in links:
-        curr_game_name, curr_game_date, curr_game_developer, curr_game_genre, curr_game_review_count, curr_game_review_positive, curr_game_review_negative, curr_game_price = GetDataFromGame(game_url)
+        curr_game_name, curr_game_date, curr_game_developer, curr_game_pub, curr_game_genre, curr_game_review_count, curr_game_review_positive, curr_game_review_negative, curr_game_price, curr_game_langs, curr_game_dlc, curr_game_mature, curr_game_single = GetDataFromGame(game_url)
         game_name_list.append(curr_game_name)
         game_date_list.append(curr_game_date)
         game_developer_list.append(curr_game_developer)
-        game_genre_list.append(curr_game_genre)
+        game_publisher_list.append(curr_game_pub)
+        game_genres_list.append(curr_game_genre)
         game_review_count_list.append(curr_game_review_count)
         game_review_positive_list.append(curr_game_review_positive)
         game_review_negative_list.append(curr_game_review_negative)
         game_price_list.append(curr_game_price)
-    for i in range(50,1000,50):
+        game_langs_list.append(curr_game_langs)
+        game_dlc_flag_list.append(curr_game_dlc)
+        game_mature_flag_list.append(curr_game_mature)
+        game_single_flag_list.append(curr_game_single)
+    for i in range(50,5100,50):
         baseurl = "https://store.steampowered.com/search/results/"
         paramater = "query&start=" + str(i) + "&count=50&dynamic_data=&sort_by=Reviews_DESC&snr=1_7_7_7000_7&filter=topsellers&infinite=1"
         response = requests.get(baseurl+paramater)
