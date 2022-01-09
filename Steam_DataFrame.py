@@ -53,7 +53,7 @@ def evaluate_performance_1st(y_test,y_predicted):
     return evaluate_value
 
 if __name__ == '__main__':
-    dataset = pd.read_csv('D:\Python projects\Steam - Visual\SteamGamesDF.csv',index_col=0)
+    dataset = pd.read_csv('SteamGamesDF.csv',index_col=0)
     cleaned_dataset  = DataCleaning(dataset)
     X_train, X_test, y_train, y_test = split_to_train_and_test(cleaned_dataset,'Score')
     trained_model = train_1st_model(X_train,y_train)
