@@ -1,3 +1,4 @@
+from numpy.core.multiarray import array
 import pandas as pd
 import numpy as np
 from pandas.core.frame import DataFrame
@@ -8,12 +9,14 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+import re
 
 def DataCleaning (Df:DataFrame):
     Temp_Df = Df.copy()
     Temp_Df.dropna(inplace=True)
-    Temp_Df.drop_duplicates(inplace=True)
+    Temp_Df.drop_duplicates(inplace=True,ignore_index=True)
     Temp_Df.drop(columns='Name',inplace=True)
+    #===========
     dateList = []
     for date in Temp_Df['Date']:
         date = date.replace('Jan','1')
@@ -33,10 +36,52 @@ def DataCleaning (Df:DataFrame):
         dateList.append(date)
     Temp_Df['Date'] = dateList
     Temp_Df['Date'] = Temp_Df['Date'].astype(int)
-    col = ['Developer','Publisher','Genre','Langs']
+    #===========
+    le = preprocessing.LabelEncoder()
+    Genre = []
+    Has_More_Than_One_Genre = []
+    pattern = "'([A-Z]\w+\s*[A-Z]?\w*)',?"
+    for i in Temp_Df['Genre']:
+        match = re.findall(pattern,i)
+        Genre.append(match)
+    
+    for L in Genre:
+        if len(L)>1:
+            Has_More_Than_One_Genre.append(1)
+        else:
+            Has_More_Than_One_Genre.append(0)
+    Temp_Df['More Than One Genre'] = Has_More_Than_One_Genre
+    Temp_Df.drop(columns='Genre',inplace=True)
+    #=========
+    Langs = []
+    Has_Other_Than_English = []
+    pattern = "\'(\w+\s*\w*)\'?"
+    for i in Temp_Df['Langs']:
+        match = re.findall(pattern,i)
+        Langs.append(match)
+    for L in Langs:
+        if len(L)>1:
+            Has_Other_Than_English.append(1)
+        else:
+            Has_Other_Than_English.append(0)
+    Temp_Df['Has Other Than English'] = Has_Other_Than_English
+    Temp_Df.drop(columns='Langs',inplace=True)
+    #=========
+    Same_Dev_Pub = []
+    for i in range(Temp_Df.shape[0]):
+        if Temp_Df.Developer[i] == Temp_Df.Publisher[i]:
+            Same_Dev_Pub.append(1)
+        else:
+            Same_Dev_Pub.append(0)
+    Temp_Df['Same Dev and Pub'] = Same_Dev_Pub
+    #========
+    col = ['Developer','Publisher']
     for i in col:
         Temp_Df[i] = LabelEncoder().fit_transform(Temp_Df[i])
+    #=========
+
     return Temp_Df
+
 def split_to_train_and_test(dataset:DataFrame, label_column):
     y = dataset[label_column]
     X = dataset.drop(columns = label_column)
