@@ -1,3 +1,4 @@
+#importing relevant libraries for the code
 from numpy.core.multiarray import array
 import pandas as pd
 import numpy as np
@@ -11,13 +12,15 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 import re
 
+#function for data cleaning the DF
 def DataCleaning (Df:DataFrame):
-    Temp_Df = Df.copy()
-    Temp_Df.dropna(inplace=True)
-    Temp_Df.drop_duplicates(inplace=True,ignore_index=True)
-    Temp_Df.drop(columns='Name',inplace=True)
+    Temp_Df = Df.copy() #we want to work on a copy and not change the original df
+    Temp_Df.dropna(inplace=True) #drop rows with missing values
+    Temp_Df.drop_duplicates(inplace=True,ignore_index=True) #drop rows with duplicate values
+    Temp_Df.drop(columns='Name',inplace=True) #game name is not relevant for the model
     #===========
-    dateList = []
+    dateList = [] #list for new dates
+    #switching months names strings with numbers
     for date in Temp_Df['Date']:
         date = date.replace('Jan','1')
         date = date.replace('Feb','2')
@@ -33,7 +36,8 @@ def DataCleaning (Df:DataFrame):
         date = date.replace('Dec','12')
         date = date.replace(' ','')
         date = date.replace(',','')
-        dateList.append(date)
+        #updating date column
+        dateList.append(date) 
     Temp_Df['Date'] = dateList
     Temp_Df['Date'] = Temp_Df['Date'].astype(int)
     #===========
@@ -96,6 +100,7 @@ def predict_1st(trained_1st_model, X_test):
 def evaluate_performance_1st(y_test,y_predicted):
     evaluate_value = r2_score(y_test,y_predicted)
     return evaluate_value
+
 
 if __name__ == '__main__':
     dataset = pd.read_csv('SteamGamesDF.csv',index_col=0)
