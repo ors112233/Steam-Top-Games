@@ -18,8 +18,6 @@ df = orig_df.copy()
 df.dropna(inplace=True) 
 df.drop_duplicates(subset='Name',inplace=True,ignore_index=True)
 
-
-
 def price_outlier_detection_iqr(df):
     temp_df = df.copy()
     outlier_rows = []
@@ -42,13 +40,9 @@ def outlier_detection_zscore_dist(df):
     temp_df.loc[outliers,'Price'] = np.nan
     return temp_df
 
-"""
 df = price_outlier_detection_iqr(df)
 df.dropna(inplace=True) 
 df.drop_duplicates(subset='Name',inplace=True,ignore_index=True)
-"""
-
-
 
 def cleandate_addyears(df):
     dateList = []
@@ -203,18 +197,9 @@ type_of_langs = get_types_of_langs(df)
 df = cleandate_addyears(df)
 df = AddNumGenresandHasMoreCol(df)
 df = AddNumofLangs(df)
-df = ChangeToNumerical(df)
 df = SameDevAndPub(df)
+df = ChangeToNumerical(df)
 correlations,tuple_arr = get_highly_correlated_cols(df)
-print(correlations)
-print("===========")
-print(tuple_arr)
-
-
-
-"""
-
-
 
 sr_price = df.value_counts(subset='Price')
 sr_dlc = df.value_counts(subset='DLC')
@@ -224,49 +209,41 @@ sr_years = df.value_counts(subset='Year')
 sr_multi_genre = df.value_counts(subset='More Than One Genre')
 sr_multi_lang = df.value_counts(subset='Has Other Than English')
 sr_same_devpub = df.value_counts(subset='Same Dev and Pub')
-
-
+"""
 Colors = ['#F2A098','#6DF871']
-plt.pie(sr_dlc,labels=["No DLC","Has DLC"],colors=Colors,shadow=True)
+plt.pie(sr_dlc,labels=["No DLC","Has DLC"],colors=Colors,shadow=True,autopct='%1.0f%%')
 plt.show()
 
-plt.pie(sr_mat,labels=["No Mature Content","Has Mature Content"],shadow=True,colors=Colors)
+plt.pie(sr_mat,labels=["No Mature Content","Has Mature Content"],shadow=True,colors=Colors,autopct='%1.0f%%')
 plt.show()
 
 Colors = ['#6DF871','#F2A098']
-plt.pie(sr_single,labels=["Has singleplayer","No singleplayer"],shadow=True,colors=Colors)
+plt.pie(sr_single,labels=["Has singleplayer","No singleplayer"],shadow=True,colors=Colors,autopct='%1.0f%%')
 plt.show()
 
-plt.pie(sr_multi_genre,labels=["Has Multiple Genres","No Multiple Genres"],colors=Colors,shadow=True)
+plt.pie(sr_multi_genre,labels=["Has Multiple Genres","No Multiple Genres"],colors=Colors,shadow=True,autopct='%1.0f%%')
 plt.show()
 
-plt.pie(sr_multi_lang,labels=["Supports Languages other than English","Has Only English"],colors=Colors,shadow=True)
+plt.pie(sr_multi_lang,labels=["Supports Languages other than English","Has Only English"],colors=Colors,shadow=True,autopct='%1.0f%%')
 plt.show()
 
-plt.pie(sr_same_devpub,labels=["Same Developer and Publisher","Different Developer and Publisher"],colors=Colors,shadow=True)
+plt.pie(sr_same_devpub,labels=["Same Developer and Publisher","Different Developer and Publisher"],colors=Colors,shadow=True,autopct='%1.0f%%')
 plt.show()
-
 
 df.hist(column='Price',bins=20)
 plt.xticks([30,50,100,150],['30','50','100','150'])
-plt.xlabel('Price')
-plt.ylabel('Frenquency')
+plt.xlabel('Price of game')
+plt.ylabel('Amount of games')
 plt.title(None)
 plt.show()
 
 plt.bar(sr_years.keys(),sr_years.values)
+plt.xlabel('Years')
+plt.ylabel('Amount of games published')
 plt.show()
-"""
 
 sr_types_of_genres = pd.Series(type_of_genres)
 sr_types_of_langs = pd.Series(type_of_langs)
-
-"""
-plt.bar(sr_types_of_genres.keys(),sr_types_of_genres.values)
-plt.show()
-
-plt.bar(sr_types_of_langs.keys(),sr_types_of_langs.values)
-plt.show()
 
 plt.pie(sr_types_of_genres)
 plt.legend(labels=sr_types_of_genres.keys(),loc=2)
@@ -276,3 +253,16 @@ plt.pie(sr_types_of_langs)
 plt.legend(labels=sr_types_of_langs.keys(),loc=2)
 plt.show()
 """
+
+score_dict = {'more than 75%':0,'less than 75%':0}
+
+for grade in df['Score']:
+    if (grade >= 0.75):
+        score_dict['more than 75%'] = score_dict.get('more than 75%') + 1
+    else:
+        score_dict['less than 75%'] = score_dict.get('less than 75%') + 1
+
+Colors = ['#6DF871','#F2A098']
+sr_score = pd.Series(score_dict)
+plt.pie(sr_score,shadow=True,autopct='%1.0f%%',colors=Colors,labels=["Games with more than 75% Score","Games with less than 75% Score"])
+plt.show()
