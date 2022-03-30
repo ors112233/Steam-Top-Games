@@ -9,6 +9,10 @@ import math
 
 #function to save the data to a new DF
 def NewDF():
+    print("please enter new DF name")
+    NewDfName = input()
+
+
     #these are the lists that will become the cols of the dataframe:
     game_name_list = [] #game names
     game_date_list = [] #game eelease dates
@@ -37,7 +41,7 @@ def NewDF():
         
         #defining parameters to help with get requests from the site
         links = [] #list of links
-        baseurl = "https://store.steampowered.com/search/?sort_by=Reviews_DESC&filter=topsellers"
+        baseurl = "https://store.steampowered.com/search/?sort_by=Reviews_DESC&category1=998&filter=topsellers"
         paramater = "&page="+str(i)
         response = requests.get(baseurl+paramater)
         website_soup = BeautifulSoup(response.content,'html.parser')
@@ -61,8 +65,8 @@ def NewDF():
         for game_url in links:
             curr_game_name, curr_game_date, curr_game_developer, curr_game_pub, curr_game_genre, curr_game_review_count, curr_game_review_positive, curr_game_review_negative, curr_game_price, curr_game_langs, curr_game_dlc, curr_game_mature, curr_game_single = GetDataFromGame(game_url)
             #not adding games with missing information on the list
-            if(curr_game_name in [np.nan]):
-                continue
+            #if(curr_game_name in [np.nan]):
+                #continue
                 
             print("last game cleared was",curr_game_name) #print for following the code run
             game_name_list.append(curr_game_name) #adding game name to game names list
@@ -89,15 +93,16 @@ def NewDF():
             game_score_list.append(result_score)
         i += 1
         #save to the dataframe every 10 pages(requests)
-        if i%10 == 0:
-            print('now creating temp df') #print for following code
-            #inserting info to df
-            GameDF = pd.DataFrame({'Name':game_name_list,'Date':game_date_list,'Developer':game_developer_list,'Publisher':game_publisher_list,'Genre':game_genres_list,'Price':game_price_list,'Langs':game_langs_list,'DLC':game_dlc_flag_list,'Mature':game_mature_flag_list,'Single':game_single_flag_list,'Score':game_score_list})
-            print('=============') #print for following code
-            print("GameDF shape is:",GameDF.shape) #print for following code
-            GameDF.to_csv('SteamGamesDF.csv') #saving df to csv file
+        #if i%10 == 0:
+        print('now creating temp df') #print for following code
+        #inserting info to df
+        GameDF = pd.DataFrame({'Name':game_name_list,'Date':game_date_list,'Developer':game_developer_list,'Publisher':game_publisher_list,'Genre':game_genres_list,'Price':game_price_list,'Langs':game_langs_list,'DLC':game_dlc_flag_list,'Mature':game_mature_flag_list,'Single':game_single_flag_list,'Total Review Cnt':game_review_count_list,'Pos Review Cnt':game_review_positive_list,'Neg Review Cnt':game_review_negative_list,'Score':game_score_list})
+        print('=============') #print for following code
+        print(NewDfName," shape is:",GameDF.shape) #print for following code
+        GameDF.to_csv(NewDfName+'.csv') #saving df to csv file
             
-            #function to continue adding to the same df if the code run is interrupted (like from bad request)
+
+#function to continue adding to the same df if the code run is interrupted (like from bad request)
 def ContinueDF(GameDF:DataFrame,i:int):
     #these are the lists that will become the cols of the dataframe:
     game_name_list = []
@@ -196,14 +201,28 @@ def ContinueDF(GameDF:DataFrame,i:int):
         
 #function that goes over the html tags on the game steam page and gets the info about the game
 def GetDataFromGame(game_url):
+    
+    response = requests.get(game_url)
+    game_soup = BeautifulSoup(response.content,'html.parser')
+    age_check_tag = game_soup.find('div',attrs={'id':'app_agegate'})
+    #working around age gate
+    if age_check_tag:
+        response = requests.get(game_url,cookies={'birthtime':'1'})
+        game_soup = BeautifulSoup(response.content,'html.parser')
+    
+    #if the page is for a subscription (like EA pass)
+    sub_tag = game_soup.find('div',attrs={'class':'game_area_purchase_game_wrapper game_purchase_sub_dropdown'})
+   
+    #if the game is a package page
+    package_tag = game_soup.find('div', attrs={'id':'package_header_container'})
+
+    """
     response = requests.get(game_url) #get request with the link the func gets
     game_soup = BeautifulSoup(response.content,'html.parser')
     
     #we had a lot of edge cases that stopped the code so we found tags to skip them in the run
     #addressing if the page is a bundle page
     bundle_tag = game_soup.find('div', attrs={'class':'game_area_purchase_game bundle ds_no_flags'})
-    #if the game is a package page
-    package_tag = game_soup.find('div', attrs={'id':'package_header_container'})
     #if the game is dlc
     dlc_tag = game_soup.find('div',attrs={'class':'game_area_bubble game_area_dlc_bubble'})
     #if the page is for a soundtrack
@@ -218,8 +237,7 @@ def GetDataFromGame(game_url):
     age_check_tag = game_soup.find('div',attrs={'id':'app_agegate'})
     #if the game is in pre-order it's not relevant because it doesn't have reviews yet
     preorder_tag = game_soup.find('div',attrs={'class':'game_area_comingsoon game_area_bubble'})
-    #if the page is for a subscription (like EA pass)
-    sub_tag = game_soup.find('div',attrs={'class':'game_area_purchase_game_wrapper game_purchase_sub_dropdown'})
+    
     #if the webpage if for a movie (behind the scenes of making a game for example)
     try:
         movie_tag = game_soup.find('div',attrs={'class':'blockbg'}).find('a').string.strip()
@@ -227,6 +245,16 @@ def GetDataFromGame(game_url):
         movie_tag = ''
         
         #setting the attributes to nan before run, and if any of the above tags are found on the page- return nan
+
+     #if any of the above outlier tags are found on the page, return nan 
+    if bundle_tag or package_tag or dlc_tag or soundtrack_tag or age_check_tag or preorder_tag:
+        return game_name,game_date,game_developer,game_publisher,game_genre,game_review_count,game_review_positive,game_review_negative,game_price,game_langs,game_dlc,game_mature,game_single
+    
+    or (soundtrack_tag2 == 'Downloadable Soundtrack') or (movie_tag == 'All Videos') 
+    """
+    
+   
+    
     game_name = np.nan
     game_date = np.nan
     game_developer = np.nan
@@ -241,11 +269,8 @@ def GetDataFromGame(game_url):
     game_mature = np.nan
     game_single = np.nan
 
-    #if any of the above outlier tags are found on the page, return nan 
-    if bundle_tag or package_tag or dlc_tag or soundtrack_tag or age_check_tag or preorder_tag:
-        return game_name,game_date,game_developer,game_publisher,game_genre,game_review_count,game_review_positive,game_review_negative,game_price,game_langs,game_dlc,game_mature,game_single
-    
-    if (game_soup.title.string == 'Welcome to Steam') or (soundtrack_tag2 == 'Downloadable Soundtrack') or (movie_tag == 'All Videos') :
+   
+    if (game_soup.title.string == 'Welcome to Steam') or package_tag:
         return game_name,game_date,game_developer,game_publisher,game_genre,game_review_count,game_review_positive,game_review_negative,game_price,game_langs,game_dlc,game_mature,game_single
     
     #we used try-except to not stop mid-run if some attributes are not found, because we had a lot of edge cases
@@ -374,6 +399,8 @@ def GetDataFromGame(game_url):
 
     return game_name,game_date,game_developer,game_publisher,game_genre,game_review_count,game_review_positive,game_review_negative,game_price,game_langs,game_dlc,game_mature,game_single
 
+    
+
 #main function to crawl on the steam site with the above functions
 if __name__ == '__main__':
     print('hello please enter 1 to start a new DF or 2 to continue an existing one') #choose between new or existing df to insert data to
@@ -381,9 +408,12 @@ if __name__ == '__main__':
     if choice == 1:
         NewDF()
     elif choice == 2:
+        print('please input the Df Name you would like to continue from')
+        Name = input()
         print('please input the page number you would like to continue from')
         i = int(input())
-        GameDF = pd.read_csv('D:\Python projects\Steam - Visual\SteamGamesDF.csv',index_col=0)
+        GameDF = pd.read_csv(Name+'.csv',index_col=0)
+        #GameDF = pd.read_csv('D:\Python projects\Steam - Visual\SteamGamesDF.csv',index_col=0)
         ContinueDF(GameDF,i)
         
         
